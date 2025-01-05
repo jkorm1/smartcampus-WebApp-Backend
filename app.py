@@ -25,12 +25,13 @@ def handle_hostels():
         image = data['image']
         price = data['price']
         handle = data['handle']
+        category = data.get('category', 'normal')
 
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            'INSERT INTO hostels (name, image, price, handle) VALUES (%s, %s, %s, %s) RETURNING id',
-            (name, image, price, handle)
+            'INSERT INTO hostels (name, image, price, handle, category) VALUES (%s, %s, %s, %s, %s) RETURNING id',
+            (name, image, price, handle, category)
         )
         hostel_id = cur.fetchone()[0]  # Get the newly created hostel ID
         conn.commit()
@@ -40,10 +41,14 @@ def handle_hostels():
         return jsonify({'message': 'Hostel added successfully', 'hostelId': hostel_id}), 201
 
     elif request.method == 'GET':
-        # Handle fetching all hostels
+        # Handle fetching all hostels or by cartegory
+        category = request.args.get('category', None)
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM hostels;')
+        if category:
+            cur.execute('SELECT * FROM hostels WHERE category = %s;', (category,))
+        else:
+            cur.execute('SELECT * FROM hostels;')
         hostels = cur.fetchall()
         cur.close()
         conn.close()
@@ -54,7 +59,8 @@ def handle_hostels():
             'price': hostel[3],
             'handle': hostel[4],
             'rating': hostel[5],
-            'reviews': hostel[6]
+            'reviews': hostel[6],
+            'category': hostel[7]
         } for hostel in hostels])
 
 # Route to handle both GET and POST requests for pricing
