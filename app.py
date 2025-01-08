@@ -41,7 +41,7 @@ def handle_hostels():
         return jsonify({'message': 'Hostel added successfully', 'hostelId': hostel_id}), 201
 
     elif request.method == 'GET':
-        # Handle fetching all hostels or by cartegory
+        # Handle fetching all hostels or by category
         category = request.args.get('category', None)
         conn = get_db_connection()
         cur = conn.cursor()
@@ -95,12 +95,29 @@ def handle_pricing():
         cur.close()
         conn.close()
         return jsonify([{
-            'id': pricing[0],
-            'title': pricing[1],
-            'price': pricing[2],
-            'amenities': pricing[3],
-            'hostel_id': pricing[4]  # Assuming hostel_id is the fifth column
-        } for pricing in pricing])
+            'id': p[0],
+            'title': p[1],
+            'price': p[2],
+            'amenities': p[3],
+            'hostel_id': p[4]
+        } for p in pricing])
+
+# Route to fetch pricing entries for a specific hostel
+@app.route('/api/pricing/<int:hostel_id>', methods=['GET'])
+def get_pricing_for_hostel(hostel_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Pricing WHERE hostel_id = %s;', (hostel_id,))
+    pricing = cur.fetchall()
+    cur.close()
+    conn.close()
+    return jsonify([{
+        'id': p[0],
+        'title': p[1],
+        'price': p[2],
+        'amenities': p[3],
+        'hostel_id': p[4]
+    } for p in pricing])
 
 if __name__ == '__main__':
     app.run(debug=True)
