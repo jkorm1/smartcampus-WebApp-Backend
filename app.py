@@ -26,12 +26,13 @@ def handle_hostels():
         price = data['price']
         handle = data['handle']
         category = data.get('category', 'normal')
+        type = data.get('type', 'hostel')  # New field for type
 
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            'INSERT INTO hostels (name, image, price, handle, category) VALUES (%s, %s, %s, %s, %s) RETURNING id',
-            (name, image, price, handle, category)
+            'INSERT INTO hostels (name, image, price, handle, category, type) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
+            (name, image, price, handle, category, type)
         )
         hostel_id = cur.fetchone()[0]  # Get the newly created hostel ID
         conn.commit()
@@ -41,14 +42,15 @@ def handle_hostels():
         return jsonify({'message': 'Hostel added successfully', 'hostelId': hostel_id}), 201
 
     elif request.method == 'GET':
-        # Handle fetching all hostels or by category
+        # Handle fetching all hostels or by category and type
         category = request.args.get('category', None)
+        type = request.args.get('type', 'hostel')
         conn = get_db_connection()
         cur = conn.cursor()
         if category:
-            cur.execute('SELECT * FROM hostels WHERE category = %s;', (category,))
+            cur.execute('SELECT * FROM hostels WHERE category = %s AND type = %s;', (category, type))
         else:
-            cur.execute('SELECT * FROM hostels;')
+            cur.execute('SELECT * FROM hostels WHERE type = %s;', (type,))
         hostels = cur.fetchall()
         cur.close()
         conn.close()
@@ -60,7 +62,8 @@ def handle_hostels():
             'handle': hostel[4],
             'rating': hostel[5],
             'reviews': hostel[6],
-            'category': hostel[7]
+            'category': hostel[7],
+            'type': hostel[8]  # Include the type field
         } for hostel in hostels])
 
 # Route to handle both GET and POST requests for pricing
