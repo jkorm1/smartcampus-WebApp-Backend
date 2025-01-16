@@ -1,3 +1,4 @@
+# In your backend code
 from flask import Flask, jsonify, request
 import psycopg2
 from flask_cors import CORS
@@ -121,6 +122,47 @@ def get_pricing_for_hostel(hostel_id):
         'amenities': p[3],
         'hostel_id': p[4]
     } for p in pricing])
+
+# Route to handle both GET and POST requests for food joints
+@app.route('/api/foodjoints', methods=['GET', 'POST'])
+def handle_foodjoints():
+    if request.method == 'POST':
+        # Handle adding a new food joint
+        data = request.get_json()
+        name = data['name']
+        image = data['image']
+        rating = data['rating']
+        reviews = data['reviews']
+        specialty = data['specialty']
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO foodjoints (name, image, rating, reviews, specialty) VALUES (%s, %s, %s, %s, %s)',
+            (name, image, rating, reviews, specialty)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({'message': 'Food Joint added successfully'}), 201
+
+    elif request.method == 'GET':
+        # Handle fetching all food joints
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM foodjoints;')
+        foodjoints = cur.fetchall()
+        cur.close()
+        conn.close()
+        return jsonify([{
+            'id': joint[0],
+            'name': joint[1],
+            'image': joint[2],
+            'rating': joint[3],
+            'reviews': joint[4],
+            'specialty': joint[5]
+        } for joint in foodjoints])
 
 if __name__ == '__main__':
     app.run(debug=True)
