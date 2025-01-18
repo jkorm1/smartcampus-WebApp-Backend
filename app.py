@@ -127,19 +127,20 @@ def get_pricing_for_hostel(hostel_id):
 @app.route('/api/foodjoints', methods=['GET', 'POST'])
 def handle_foodjoints():
     if request.method == 'POST':
-        # Handle adding a new food joint
         data = request.get_json()
         name = data['name']
         image = data['image']
         rating = data['rating']
         reviews = data['reviews']
         specialty = data['specialty']
+        category = data.get('category', 'normal')
+        instagram_handle = data.get('instagram_handle', '')  # New field for Instagram handle
 
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            'INSERT INTO foodjoints (name, image, rating, reviews, specialty) VALUES (%s, %s, %s, %s, %s)',
-            (name, image, rating, reviews, specialty)
+            'INSERT INTO foodjoints (name, image, rating, reviews, specialty, category, instagram_handle) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (name, image, rating, reviews, specialty, category, instagram_handle)  # Include Instagram handle in the insert statement
         )
         conn.commit()
         cur.close()
@@ -161,7 +162,8 @@ def handle_foodjoints():
             'image': joint[2],
             'rating': joint[3],
             'reviews': joint[4],
-            'specialty': joint[5]
+            'specialty': joint[5],
+            'category': joint[6]  # Include the category field
         } for joint in foodjoints])
 
 if __name__ == '__main__':
